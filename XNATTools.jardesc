@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="WINDOWS-1252"?>
+<jardesc>
+<jar path="D:/MERCURIAL/pipeline_cnda_1_5/lib/XNATTools.jar"/>
+<options buildIfNeeded="true" compress="true" descriptionLocation="/pipeline_xnattools_1_5/XNATTools.jardesc" exportErrors="false" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+<storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+<selectedProjects/>
+<manifest generateManifest="true" manifestLocation="/pipeline_xnattools_1_5/Manifest.txt" manifestVersion="1.0" reuseManifest="false" saveManifest="true" usesManifest="true">
+<sealing sealJar="false">
+<packagesToSeal/>
+<packagesToUnSeal/>
+</sealing>
+</manifest>
+<selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.xnattools.om"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.xnattools"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.pipeline.xmlreader"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.xnattools.service"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.xnattools.xml"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.handler"/>
+<javaElement handleIdentifier="=pipeline_xnattools_1_5/&lt;org.nrg.xnattools.exception"/>
+</selectedElements>
+</jardesc>
