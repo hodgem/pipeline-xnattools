@@ -1,22 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/xbean.jar" sourcepath="C:/JavaTools/xmlbeans-2.2.0/xmlbeans-2.2.0-src/xmlbeans-2.2.0/src"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/xbean_xpath.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/jaxrpc-1.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/commons-discovery-0.2.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/saaj-1.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/jsr173_1.0_api.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/commons-lang-2.1.jar"/>
-	<classpathentry kind="lib" path="C:/xnat_pipeline_collection/lib/activation-1.0.2.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline/lib/axis-1_3.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline_cnda_beta/pipeline/lib/org.restlet-1.1rc1.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline_cnda_beta/pipeline/lib/com.noelios.restlet-1.1rc1.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline_cnda_beta/pipeline/lib/pipelineXNAT.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline_cnda_beta/pipeline/lib/com.noelios.restlet.ext.net.jar"/>
-	<classpathentry kind="lib" path="C:/DATA/pipeline_cnda_beta/pipeline/lib/log4j-1.2.8.jar"/>
-	<classpathentry kind="lib" path="C:/Documents and Settings/mohanar/My Documents/Downloads/xdat-beans-1.0.jar" sourcepath="C:/Documents and Settings/mohanar/My Documents/Downloads/xdat-beans-1.0-source.jar"/>
-	<classpathentry kind="output" path=""/>
+	<classpathentry kind="src" output="target/classes" path="src/main/java"/>
+	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
