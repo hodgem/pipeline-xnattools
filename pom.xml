@@ -13,6 +13,18 @@
 
 	<dependencies>
 
+        <!-- NRG/XDAT/XNAT dependencies. If these don't resolve, check that the Maven repositories are available. -->
+		<dependency>
+			<groupId>org.nrg</groupId>
+			<artifactId>pipelineXNAT</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.nrg.xdat</groupId>
+			<artifactId>beans</artifactId>
+			<version>1.0</version>
+		</dependency>
+
 		<!-- Spring EBR dependencies -->
 		<dependency>
 			<groupId>org.apache.log4j</groupId>
@@ -66,22 +78,6 @@
 			<groupId>com.noelios.restlet</groupId>
 			<artifactId>com.noelios.restlet.ext.net</artifactId>
 			<version>1.1.8</version>
-		</dependency>
-
-		<!-- System-scoped system libraries -->
-		<dependency>
-			<groupId>org.nrg.xnat.pipeline</groupId>
-			<artifactId>pipelineXNAT</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/pipelineXNAT.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org.nrg.xnat.pipeline</groupId>
-			<artifactId>xdat-beans</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/xdat-beans-1.0.jar</systemPath>
 		</dependency>
 
 		<!-- Test dependencies -->
@@ -143,31 +139,29 @@
 		</plugins>
 	</reporting>
 
+	<pluginRepositories>
+		<pluginRepository>
+			<name>NRG/XDAT/XNAT Temporary Snapshot Maven Plugin Repo</name>
+			<id>org.nrg.maven.plugins.snapshot</id>
+			<url>http://nrg115.nrg.mir/artifactory/plugins-snapshot</url>
+		</pluginRepository>
+		<pluginRepository>
+			<name>NRG/XDAT/XNAT Temporary Release Maven Plugin Repo</name>
+			<id>org.nrg.maven.plugins.release</id>
+			<url>http://nrg115.nrg.mir/artifactory/plugins-release</url>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<repositories>
 		<repository>
-			<name>SpringSource EBR Release Repository</name>
-			<id>com.springsource.repository.bundles.release</id>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
+			<name>NRG/XDAT/XNAT Temporary Release Maven Repo</name>
+			<id>org.nrg.maven.artifacts.release</id>
+			<url>http://nrg115.nrg.mir/artifactory/libs-release</url>
 		</repository>
 		<repository>
-			<name>SpringSource EBR External Release Repository</name>
-			<id>com.springsource.repository.bundles.external</id>
-			<url>http://repository.springsource.com/maven/bundles/external</url>
-		</repository>
-		<repository>
-			<name>Java Maven Repository</name>
-			<id>java.net</id>
-			<url>http://download.java.net/maven/2</url>
-		</repository>
-		<repository>
-			<name>Maven Central Repository</name>
-			<id>maven.org</id>
-			<url>http://repo2.maven.org/</url>
-		</repository>
-		<repository>
-			<id>maven-restlet</id>
-			<name>Public online Restlet repository</name>
-			<url>http://maven.restlet.org</url>
+			<name>NRG/XDAT/XNAT Temporary Snapshot Maven Repo</name>
+			<id>org.nrg.maven.artifacts.snapshot</id>
+			<url>http://nrg115.nrg.mir/artifactory/libs-snapshot</url>
 		</repository>
 	</repositories>
 
