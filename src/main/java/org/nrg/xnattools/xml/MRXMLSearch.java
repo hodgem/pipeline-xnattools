@@ -8,34 +8,23 @@
 
 package org.nrg.xnattools.xml;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Calendar;
-
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.xmlbeans.XmlObject;
 import org.nrg.pipeline.xmlbeans.xnat.MRSessionDocument;
 import org.nrg.pipeline.xmlreader.XmlReader;
 import org.nrg.xdat.bean.XnatMrsessiondataBean;
-import org.nrg.xdat.bean.base.BaseElement;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Calendar;
 
 public class MRXMLSearch extends AbsService {
     
     boolean quiet = true;
     
-    public MRXMLSearch(String host, String username, String password) {
+    public MRXMLSearch(String host, String username, String password) throws MalformedURLException {
     	super(host, username,password);
     }
     
@@ -93,7 +82,6 @@ public class MRXMLSearch extends AbsService {
     /**
      * @param value
      * @param dir
-     * @param quiet
      * @return Path to created XML File
      * @throws FileNotFoundException
      * @throws MalformedURLException
@@ -113,35 +101,24 @@ public class MRXMLSearch extends AbsService {
             outFile = new File(dir,finalName);
         }
         
-            if (!quiet)System.out.println("Requesting xml for " + value + "");
-            long startTime = Calendar.getInstance().getTimeInMillis();
-            URL url = new URL(host + "app/template/MRXMLSearch.vm/id/" + value + "/adjustPath/fullpath");
-            URLConnection urlConn = url.openConnection();
-            urlConn.setRequestProperty("Cookie", "JSESSIONID="+service_session);
+        if (!quiet) {
+            System.out.println("Requesting xml for " + value + "");
+        }
+        long startTime = Calendar.getInstance().getTimeInMillis();
+        URL url = new URL(host + "app/template/MRXMLSearch.vm/id/" + value + "/adjustPath/fullpath");
 
-            //Use Buffered Stream for reading/writing.
-            BufferedInputStream  bis = null; 
-            BufferedOutputStream bos = null;
-            
-            FileOutputStream out = new FileOutputStream(outFile);
+        String response = getResponseBody(url);
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outFile));
+        byte[] bytes = response.getBytes();
+        bos.write(bytes, 0, bytes.length);
+        bos.flush();
+        bos.close();
 
-            bis = new BufferedInputStream(urlConn.getInputStream());
-            bos = new BufferedOutputStream(out);
+        if (!quiet) {
+            System.out.println("Response Received (" + (Calendar.getInstance().getTimeInMillis() - startTime) + " ms)");
+        }
 
-            byte[] buff = new byte[2048];
-            int bytesRead;
-            
-            while(-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
-                bos.write(buff, 0, bytesRead);
-
-            }
-            
-            bos.flush();
-            bos.close();
-            
-            if (!quiet)System.out.println("Response Received (" + (Calendar.getInstance().getTimeInMillis() - startTime) + " ms)");
-
-            return outFile.getAbsolutePath();
+        return outFile.getAbsolutePath();
     }
     
     public MRSessionDocument getMrSessionFromHost(String id) throws Exception {
@@ -192,7 +169,7 @@ public class MRXMLSearch extends AbsService {
    }
     
     
-    public static void main(String args[]) {
+    public static void main(String args[]) throws MalformedURLException {
         MRXMLSearch search = new MRXMLSearch("https://cndabeta.wustl.edu","mohanar","***");
                 //String createdFile = search.getXML("OAS1_0001_MR1", ".");
         try {

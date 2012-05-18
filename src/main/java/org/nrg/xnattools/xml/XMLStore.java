@@ -8,6 +8,7 @@
 
 package org.nrg.xnattools.xml;
 
+import java.net.MalformedURLException;
 import java.util.Calendar;
 
 import org.apache.axis.client.Call;
@@ -16,12 +17,12 @@ import org.apache.xmlbeans.XmlOptions;
 
 public class XMLStore extends AbsService {
     
-    public XMLStore(XmlObject xmlObject, String host, String user, String pwd) {
+    public XMLStore(XmlObject xmlObject, String host, String user, String pwd) throws MalformedURLException {
     	super(host, user,pwd);
         xml = xmlObject;
     }
 
-    public XMLStore(String host, String user, String pwd) {
+    public XMLStore(String host, String user, String pwd) throws MalformedURLException {
     	super(host, user,pwd);
     	this.xml = null;
     }

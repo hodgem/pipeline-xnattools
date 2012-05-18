@@ -8,28 +8,33 @@
 
 package org.nrg.xnattools.xml;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.rmi.RemoteException;
-import java.security.Security;
-import java.util.Calendar;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.rpc.ServiceException;
-
 import org.apache.axis.client.Call;
 import org.apache.axis.client.Service;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 import org.nrg.xdat.bean.base.BaseElement;
 import org.nrg.xdat.bean.reader.XDATXMLReader;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.rpc.ServiceException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.Calendar;
 
 public abstract class AbsService {
 	
@@ -37,9 +42,10 @@ public abstract class AbsService {
 	protected boolean externalSessionID = false;
     protected String host, username, password;
     protected Service service;
-    protected  String SESSION_ID;
+    protected final HttpHost _targetHost;
+    protected final HttpContext _context;
 
-    public AbsService(String host, String username, String password) {
+    public AbsService(String host, String username, String password) throws MalformedURLException {
         this.host = host;
         if (!this.host.endsWith("/")) this.host += "/";
         this.username = username;
@@ -53,6 +59,13 @@ public abstract class AbsService {
     	 System.setProperty("javax.net.ssl.trustStorePassword", trustStorePwd);
     	 System.out.println("Set the TRUST CERTIFICATES");
         }
+
+        URL url = new URL(host);
+        AuthCache authCache = new BasicAuthCache();
+        _targetHost = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+        authCache.put(_targetHost, new BasicScheme());
+        _context = new BasicHttpContext();
+        _context.setAttribute(ClientContext.AUTH_CACHE, authCache);
     }
     
     
@@ -60,7 +73,30 @@ public abstract class AbsService {
         service.setMaintainSession(true);
         return service;
     }
-    
+
+    protected String getResponseBody(URL url) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+        try {
+            httpclient.getCredentialsProvider().setCredentials(
+                    new AuthScope(_targetHost.getHostName(), _targetHost.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+
+            HttpGet httpget = new HttpGet(url.getPath());
+
+            HttpResponse response = httpclient.execute(_targetHost, httpget, _context);
+            HttpEntity entity = response.getEntity();
+
+            if (entity != null) {
+                buffer.append(EntityUtils.toString(entity));
+                EntityUtils.consume(entity);
+            }
+        } finally {
+            httpclient.getConnectionManager().shutdown();
+        }
+        return buffer.toString();
+    }
+
     protected Call createCall(String session) throws ServiceException{
         
         Call call= (Call)getService().createCall();
@@ -135,7 +171,6 @@ public abstract class AbsService {
     }
 
 	/**
-	 * @return Session id for use in subsequent requests.
 	 * @throws ServiceException
 	 * @throws MalformedURLException
 	 * @throws RemoteException
@@ -154,41 +189,31 @@ public abstract class AbsService {
 	
 	
 	
-    protected BaseElement getBeanFromXml(String xmlfilePath, boolean deleteFile) throws IOException, SAXException{
-        File f = new File(xmlfilePath);
+    protected BaseElement getBeanFromXml(String xmlFilePath, boolean deleteFile) throws IOException, SAXException{
+        File f = new File(xmlFilePath);
         InputStream fis = new FileInputStream(f);
         BaseElement base = getBeanFromStream(fis); 
-        if (deleteFile) f.delete();
+        if (deleteFile) {
+            f.delete();
+        }
         return base;
     }
     
     protected BaseElement getBeanFromStream(InputStream in) throws IOException, SAXException{
         XDATXMLReader reader = new XDATXMLReader();
-        BaseElement base = reader.parse(in);
-        return base;
+        return reader.parse(in);
     }
     
-    protected void executeToStream(String service_session,String value, boolean fullPath, OutputStream bos, boolean quiet)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException{
+    protected void executeToStream(String service_session, String value, boolean fullPath, OutputStream bos, boolean quiet)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException{
         if (!quiet)System.out.println("Requesting xml for " + value + "");
         long startTime = Calendar.getInstance().getTimeInMillis();
         String urlStr = host + "app/template/MRXMLSearch.vm/id/" + value;
         if (fullPath)
         	 urlStr += "/adjustPath/fullpath";
         URL url = new URL(urlStr);
-        URLConnection urlConn = url.openConnection();
-        urlConn.setRequestProperty("Cookie", "JSESSIONID="+service_session);
-
-        //Use Buffered Stream for reading/writing.
-        BufferedInputStream  bis = null; 
-
-        bis = new BufferedInputStream(urlConn.getInputStream());
-
-        byte[] buff = new byte[2048];
-        int bytesRead;
-        
-        while(-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
-            bos.write(buff, 0, bytesRead);
-        }
+        String response = getResponseBody(url);
+        final byte[] bytes = response.getBytes();
+        bos.write(bytes, 0, bytes.length);
         bos.flush();
         if (!quiet)System.out.println("Response Received (" + (Calendar.getInstance().getTimeInMillis() - startTime) + " ms)");
 }
@@ -222,5 +247,4 @@ public abstract class AbsService {
             }
         }
     }
-
 }
