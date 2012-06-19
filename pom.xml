@@ -1,0 +1,159 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.nrg</groupId>
+		<artifactId>nrg</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../nrg/pom.xml</relativePath>
+	</parent>
+
+	<groupId>org.nrg.xnat.pipeline</groupId>
+	<artifactId>xnat_tools</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>XNAT Tools</name>
+
+	<dependencies>
+
+        <!-- NRG/XDAT/XNAT dependencies. If these don't resolve, check that the Maven repositories are available. -->
+		<dependency>
+			<groupId>org.nrg</groupId>
+			<artifactId>pipelineXNAT</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.nrg.xdat</groupId>
+			<artifactId>beans</artifactId>
+			<version>1.0</version>
+		</dependency>
+
+		<!-- Spring EBR dependencies -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.1.3</version>
+        </dependency>
+        <dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.5</version>
+		</dependency>
+
+		<!-- Upgradable libraries -->
+		<dependency>
+			<groupId>org.apache.xmlbeans</groupId>
+			<artifactId>xmlbeans</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		<dependency>
+			<!-- TODO: Upgrade to 1.4 or new package or use Spring. -->
+			<groupId>axis</groupId>
+			<artifactId>axis</artifactId>
+			<version>1.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.noelios.restlet</groupId>
+			<artifactId>com.noelios.restlet</artifactId>
+			<version>1.1.10</version>
+		</dependency>
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+
+		<!-- TODO: Standardize output naming to Maven defaults to allow version info in filename. -->
+		<finalName>XNATTools</finalName>
+		
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>2.3.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>emma-maven-plugin</artifactId>
+				<version>1.0-alpha-3</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<compilerVersion>1.6</compilerVersion>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.9</version>
+			</plugin>
+		</plugins>
+
+	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>2.3.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>emma-maven-plugin</artifactId>
+				<version>1.0-alpha-3</version>
+			</plugin>
+		</plugins>
+	</reporting>
+
+    <repositories>
+        <repository>
+            <id>org.nrg.maven.artifacts.snapshot</id>
+            <name>XNAT Snapshot Maven Repo</name>
+            <url>http://maven.xnat.org/libs-snapshot</url>
+        </repository>
+        <repository>
+            <id>org.nrg.maven.artifacts.release</id>
+            <name>XNAT Release Maven Repo</name>
+            <url>http://maven.xnat.org/libs-release</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>org.nrg.maven.plugins.snapshot</id>
+            <name>XNAT Snapshot Maven Plugin Repo</name>
+            <url>http://maven.xnat.org/plugins-snapshot</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>org.nrg.maven.plugins.release</id>
+            <name>XNAT Release Maven Plugin Repo</name>
+            <url>http://maven.xnat.org/plugins-release</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>XNAT Server</id>
+            <name>XNAT Maven Library Release</name>
+            <url>http://maven.xnat.org/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>XNAT Server</id>
+            <name>XNAT Maven Library Snapshots</name>
+            <url>http://maven.xnat.org/libs-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

@@ -1,34 +1,40 @@
 package org.nrg.xnattools.xml;
 
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Calendar;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.rpc.ServiceException;
-
 import org.apache.axis.client.Call;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.util.EntityUtils;
 import org.apache.xmlbeans.XmlObject;
 import org.nrg.xdat.bean.XnatImagesessiondataBean;
 import org.nrg.xdat.bean.base.BaseElement;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.rpc.ServiceException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Calendar;
+
 public class XMLSearch extends AbsService {
     
-    public XMLSearch(String host, String username, String password) {
-    	super(host, username,password);
+    public XMLSearch(String host, String username, String password) throws MalformedURLException {
+    	super(host, username, password);
     }
     
     public String getReadMe(String session_id) throws Exception {
@@ -40,14 +46,11 @@ public class XMLSearch extends AbsService {
             call.setTargetEndpointAddress(url);
             call.setOperationName("search");
             Object[] params = new Object[]{service_session,"xnat:mrSessionData.ID","=",session_id,"xnat:mrSessionData"};
-            String s = (String)call.invoke(params);
-            return s;
-    	}catch (Exception e) {
-    		throw e;
-    	 }finally {
+            return (String)call.invoke(params);
+    	} finally {
              try {
                  if (service_session != null)closeServiceSession(service_session);
-             }catch(Exception e) {
+             } catch (Exception e) {
                  e.printStackTrace();
                  System.out.println("Couldnt close connection to host " + host );
                  throw e;
@@ -55,7 +58,7 @@ public class XMLSearch extends AbsService {
          }
     }
     
-    public String  searchFirst(String field, String value, String comparison, String dataType, String dir) throws Exception {
+    public String searchFirst(String field, String value, String comparison, String dataType, String dir) throws Exception {
         String createdFile = null;
         String service_session = null;
         try {
@@ -207,9 +210,7 @@ public class XMLSearch extends AbsService {
     
     
     /**
-     * @param host
      * @param service_session
-     * @param id
      * @param dataType
      * @param dir
      * @param quiet
@@ -232,35 +233,34 @@ public class XMLSearch extends AbsService {
             outFile = new File(dir,finalName);
         }
         
-            if (!quiet)System.out.println("Requesting xml for " + value + "");
-            long startTime = Calendar.getInstance().getTimeInMillis();
+        if (!quiet) {
+            System.out.println("Requesting xml for " + value + "");
+        }
+        long startTime = Calendar.getInstance().getTimeInMillis();
 
-            URL url = new URL(host + "app/template/XMLSearch.vm/id/" + value + "/data_type/" + dataType);
-            URLConnection urlConn = url.openConnection();
-            urlConn.setRequestProperty("Cookie", "JSESSIONID="+service_session);
-            //Use Buffered Stream for reading/writing.
-            BufferedInputStream  bis = null; 
+        URL url = new URL(host + "app/template/XMLSearch.vm/id/" + value + "/data_type/" + dataType);
+
+        String response = getResponseBody(url);
+
+        if (response.length() > 0) {
             BufferedOutputStream bos = null;
-            
-            FileOutputStream out = new FileOutputStream(outFile);
-
-            bis = new BufferedInputStream(urlConn.getInputStream());
-            bos = new BufferedOutputStream(out);
-
-            byte[] buff = new byte[2048];
-            int bytesRead;
-            
-            while(-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
-                bos.write(buff, 0, bytesRead);
-
+            try {
+                bos = new BufferedOutputStream(new FileOutputStream(outFile));
+                final byte[] bytes = response.getBytes();
+                bos.write(bytes, 0, bytes.length);
+            } finally {
+                if (bos != null) {
+                    bos.flush();
+                    bos.close();
+                }
             }
-            
-            bos.flush();
-            bos.close();
-            
-            if (!quiet)System.out.println("Response Received (" + (Calendar.getInstance().getTimeInMillis() - startTime) + " ms)");
+        }
 
-            return outFile.getAbsolutePath();
+        if (!quiet) {
+            _log.debug("Response Received (" + (Calendar.getInstance().getTimeInMillis() - startTime) + " ms)");
+        }
+
+        return outFile.getAbsolutePath();
     }
     
     public BaseElement getBeanFromHost(String id, boolean fullPath) throws Exception {
@@ -277,7 +277,7 @@ public class XMLSearch extends AbsService {
         return bean;
    }
     
-    public static void main(String args[]) {
+    public static void main(String args[]) throws MalformedURLException {
         //XMLSearch search = new XMLSearch("http://cnda.neuroimage.wustl.edu:80","mohanar","BLA");
         //String createdFile = search.searchFirst("xnat:mrSessionData.ID","633-BS", "=","xnat:mrSessionData",".");
         XMLSearch search = new XMLSearch("https://cnda.wustl.edu","mohanar","admin");
@@ -293,4 +293,5 @@ public class XMLSearch extends AbsService {
     }
     
     XmlObject xml;
+    private static final Log _log = LogFactory.getLog(XMLSearch.class);
 }

@@ -28,9 +28,7 @@ import org.restlet.data.Response;
 
 public class WebServiceClient extends AbsService {
 
-
-	
-	public WebServiceClient(String host, String username, String password) {
+	public WebServiceClient(String host, String username, String password) throws MalformedURLException {
 		super(host, username, password);
 	}
 	
