@@ -14,6 +14,7 @@ import java.util.Calendar;
 import org.apache.axis.client.Call;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
+import org.nrg.xnattools.SessionManager;
 
 public class XMLStore extends AbsService {
     
@@ -31,8 +32,8 @@ public class XMLStore extends AbsService {
     
     public void store(String xmlContents)  throws Exception{
         try {
-        	 String service_session = createServiceSession();
-             Call call = createCall(service_session);;
+        	 String service_session = SessionManager.GetInstance().getJSESSION();
+             Call call = createCall(service_session);
             call.setTargetEndpointAddress(host + "axis/StoreXML.jws");
             
             call.setOperationName("store");
@@ -43,8 +44,6 @@ public class XMLStore extends AbsService {
             String o = (String)call.invoke(params);
             long duration = Calendar.getInstance().getTimeInMillis() - startTime;
             System.out.println("Response Received (" + duration + " ms)");
-            closeServiceSession(service_session);
-            //System.out.println(o);
             call = null;
         }catch (Exception e) {
             e.printStackTrace();

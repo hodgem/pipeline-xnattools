@@ -16,8 +16,9 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
 import org.nrg.xnattools.exception.UserNameNotFoundException;
+
+//import com.sun.xml.internal.ws.util.StringUtils;
 
 public class XNATPassFileParser {
     Properties xnatPassFile;
@@ -61,9 +62,9 @@ public class XNATPassFileParser {
             String key = (String)keys.nextElement();
             if (key.indexOf(pattern) != -1) {
                 if (returnKey)
-                    rtn = StringUtils.replace(key,pattern,"");
-                else
-                    rtn = xnatPassFile.getProperty(key);
+//                    rtn = StringUtils.replace(key,pattern,"");
+//                else
+//                    rtn = xnatPassFile.getProperty(key);
                 break;
             }
         }
@@ -72,9 +73,9 @@ public class XNATPassFileParser {
     }
     
     private String fix(String host) {
-        if (host.startsWith("http://")) {
-            host = StringUtils.replace(host,"http://","@");
-        }
+//        if (host.startsWith("http://")) {
+//            host = StringUtils.replace(host,"http://","@");
+ //       }
         if (!host.startsWith("@")) host = "@" + host;
         if (!host.endsWith("/")) {
             host += "/";

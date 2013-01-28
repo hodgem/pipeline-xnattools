@@ -8,17 +8,27 @@
 
 package org.nrg.xnattools.xml;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Calendar;
+
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.xmlbeans.XmlObject;
 import org.nrg.pipeline.xmlbeans.xnat.MRSessionDocument;
 import org.nrg.pipeline.xmlreader.XmlReader;
 import org.nrg.xdat.bean.XnatMrsessiondataBean;
+import org.nrg.xnattools.SessionManager;
+import org.nrg.xnattools.exception.SessionManagerNotInitedException;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Calendar;
 
 public class MRXMLSearch extends AbsService {
     
@@ -33,10 +43,10 @@ public class MRXMLSearch extends AbsService {
         String createdFile = null;
         String service_session = null;
         try {
-            service_session = createServiceSession();
+            service_session = SessionManager.GetInstance().getJSESSION();
             if (service_session != null) {
 	            try {
-	                        createdFile = execute(service_session,id, dir);
+	                        createdFile = execute(id, dir);
 	                        System.out.println("Created File: " + createdFile);
 	                    } catch (SAXException e) {
 	                        System.out.println("ERROR CODE 30: Invalid XML Received.");
@@ -49,25 +59,13 @@ public class MRXMLSearch extends AbsService {
             e.printStackTrace();
             System.out.println("Couldnt connect to host " + host );
             throw e;
-        }finally {
-            try {
-                if (service_session != null) closeServiceSession(service_session);
-            }catch(Exception e) {
-                e.printStackTrace();
-                System.out.println("Couldnt close connection to host " + host );
-                throw e;
-            }
         }
         return createdFile;
     }
-    
    
     
-    
-   
-    
-    private void executeToStream(String service_session,String value, OutputStream bos)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException{
-    	executeToStream(service_session, value, true,bos, quiet);
+    private void executeToStream(String value, OutputStream bos)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException, SessionManagerNotInitedException{
+    	executeToStream(value, true,bos, quiet);
     }
     
     
@@ -90,7 +88,7 @@ public class MRXMLSearch extends AbsService {
      * @throws ParserConfigurationException
      * 
      */
-    private String execute(String service_session,String value, String dir)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException{
+    private String execute(String value, String dir)throws FileNotFoundException, MalformedURLException, IOException, SAXException, ParserConfigurationException, SessionManagerNotInitedException{
         int counter = 0;
         String finalName = value + ".xml";
         if (!dir.endsWith(File.separator)) dir += File.separator;

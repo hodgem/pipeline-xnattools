@@ -18,6 +18,8 @@ import java.rmi.RemoteException;
 
 import javax.xml.rpc.ServiceException;
 
+import org.nrg.xnattools.SessionManager;
+import org.nrg.xnattools.exception.SessionManagerNotInitedException;
 import org.nrg.xnattools.xml.AbsService;
 import org.restlet.Client;
 import org.restlet.data.Cookie;
@@ -32,35 +34,31 @@ public class WebServiceClient extends AbsService {
 		super(host, username, password);
 	}
 	
-	public String connect(String uriStr) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException{
+	public String connect(String uriStr) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException, SessionManagerNotInitedException{
 		String rtn = "";
 		URI uri = new URI(host +  uriStr);
-		String userSessionId = createServiceSession();
+		String userSessionId = SessionManager.GetInstance().getJSESSION();
 		 // Define our Restlet HTTP client.
 	      Client client = new Client(uri.getScheme());
 	      // The URI of the resource "list of items".
 	      Reference rscUri = new Reference(uri.toString());
 	      rtn = get(userSessionId, client,rscUri);
-	      closeServiceSession(userSessionId);
 		return rtn;
 	}
 	
 	
-	
-	public void connect(String uriStr, OutputStream stream) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException{
+	public void connect(String uriStr, OutputStream stream) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException, SessionManagerNotInitedException{
 		String rtn = "";
 		URI uri = new URI(host +  uriStr);
-		String userSessionId = createServiceSession();
+		String userSessionId =  SessionManager.GetInstance().getJSESSION();
 		 // Define our Restlet HTTP client.
 	      Client client = new Client(uri.getScheme());
 	      // The URI of the resource "list of items".
 	      Reference rscUri = new Reference(uri.toString());
 	      get(userSessionId, client,rscUri, stream);
-	      closeServiceSession(userSessionId);
 	}
-		
-	
-	 public String get(String userSessionId, Client client, Reference reference)   throws IOException {
+
+	public String get(String userSessionId, Client client, Reference reference)   throws IOException {
 		 	Request request = new Request(Method.GET, reference);
 		 	request.getCookies().add(new Cookie("JSESSIONID", userSessionId));
 		 	String rtn = "";

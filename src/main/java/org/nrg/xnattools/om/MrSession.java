@@ -18,9 +18,7 @@ public class MrSession {
     
     public Object[] getAllMrSessionIds(String host, String username, String password) throws Exception {
         XMLSearch search = new XMLSearch(host,username,password);
-        String service_session = search.createServiceSession();
-        Object[] sessionIds = search.getIdentifiers(service_session,"xnat:mrSessionData.ID","xnat:mrSessionData");
-        search.closeServiceSession(service_session);
+        Object[] sessionIds = search.getIdentifiers("xnat:mrSessionData.ID","xnat:mrSessionData");
         if (sessionIds != null) {
             System.out.println("Total sesions are " + sessionIds.length);
         }else {
