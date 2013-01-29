@@ -34,23 +34,63 @@ public class WebServiceClient extends AbsService {
 		super(host, username, password);
 	}
 	
-	public String connect(String uriStr) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException, SessionManagerNotInitedException{
+	@Deprecated
+	public String createServiceSession() throws Exception {
+		String userSessionId = null;
+		try {
+		 userSessionId = SessionManager.GetInstance().getJSESSION();
+		}catch(SessionManagerNotInitedException sme) {
+			SessionManager.GetInstance(host,username,password);
+			try {
+			userSessionId = SessionManager.GetInstance().getJSESSION();
+			}catch(SessionManagerNotInitedException sme1) {
+				System.out.println("SessionManager not inited. Please init the session manager first");
+				sme1.printStackTrace();
+			}
+		}
+		return userSessionId;
+	}
+	
+	public String connect(String uriStr) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException{
 		String rtn = "";
 		URI uri = new URI(host +  uriStr);
-		String userSessionId = SessionManager.GetInstance().getJSESSION();
-		 // Define our Restlet HTTP client.
+		String userSessionId = null;
+		try {
+		 userSessionId = SessionManager.GetInstance().getJSESSION();
+		}catch(SessionManagerNotInitedException sme) {
+			SessionManager.GetInstance(host,username,password);
+			try {
+			userSessionId = SessionManager.GetInstance().getJSESSION();
+			}catch(SessionManagerNotInitedException sme1) {
+				System.out.println("SessionManager not inited. Please init the session manager first");
+				sme1.printStackTrace();
+			}
+		}
+			// Define our Restlet HTTP client.
 	      Client client = new Client(uri.getScheme());
 	      // The URI of the resource "list of items".
 	      Reference rscUri = new Reference(uri.toString());
 	      rtn = get(userSessionId, client,rscUri);
-		return rtn;
+	      return rtn;
 	}
 	
 	
-	public void connect(String uriStr, OutputStream stream) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException, SessionManagerNotInitedException{
+	public void connect(String uriStr, OutputStream stream) throws URISyntaxException, ServiceException,MalformedURLException, RemoteException, IOException{
 		String rtn = "";
 		URI uri = new URI(host +  uriStr);
-		String userSessionId =  SessionManager.GetInstance().getJSESSION();
+		String userSessionId = null;
+		try {
+		 userSessionId = SessionManager.GetInstance().getJSESSION();
+		}catch(SessionManagerNotInitedException sme) {
+			SessionManager.GetInstance(host,username,password);
+			try {
+			userSessionId = SessionManager.GetInstance().getJSESSION();
+			}catch(SessionManagerNotInitedException sme1) {
+				System.out.println("SessionManager not inited. Please init the session manager first");
+				sme1.printStackTrace();
+				throw new IOException("SessionManager not inited");
+			}
+		}
 		 // Define our Restlet HTTP client.
 	      Client client = new Client(uri.getScheme());
 	      // The URI of the resource "list of items".
@@ -131,9 +171,21 @@ public class WebServiceClient extends AbsService {
 		 	}
 	 }
 
+	@Deprecated 
+	public void closeServiceSession(String jsession) {
+	}
 
-	
-	
+	@Deprecated
+	public String refreshServiceSession(String jsession) throws Exception{
+		String rtn = null;
+		try {
+			rtn = SessionManager.GetInstance().getJSESSION();
+			return rtn;
+		}catch(Exception e) {
+			throw new Exception(e.getMessage());
+		}
+	}
+
 	
 	public static void main(String args[]) {
 		String host = args[0];

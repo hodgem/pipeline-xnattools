@@ -139,7 +139,7 @@ public class SessionManager {
 
 
     public static void main(String[] args) throws Exception {
-    	SessionManager sessionManager = SessionManager.GetInstance("http://localhost:8080", "mohanar", "Admin999");
+    	SessionManager sessionManager = SessionManager.GetInstance("http://localhost:8080", "USER", "PWD");
     	String _jsession = sessionManager.getJSESSION();
     	System.out.println("Is Session Alive " + sessionManager.isAliveJSESSION());
 //    	try {
