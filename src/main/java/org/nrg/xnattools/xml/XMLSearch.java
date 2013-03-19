@@ -233,9 +233,9 @@ public class XMLSearch extends AbsService {
    }
     
     public static void main(String args[]) throws MalformedURLException {
-        //XMLSearch search = new XMLSearch("http://cnda.neuroimage.wustl.edu:80","mohanar","BLA");
+        //XMLSearch search = new XMLSearch("SITE","USER","BLA");
         //String createdFile = search.searchFirst("xnat:mrSessionData.ID","633-BS", "=","xnat:mrSessionData",".");
-        XMLSearch search = new XMLSearch("https://cnda.wustl.edu","mohanar","admin");
+        XMLSearch search = new XMLSearch("URL","USER","BLA");
         try {
            	XnatImagesessiondataBean imageSession  = (XnatImagesessiondataBean) search.getBeanFromHost("CNDA_E16035", true);
             System.out.println(imageSession.getId() + " " + imageSession.getAcquisitionSite());

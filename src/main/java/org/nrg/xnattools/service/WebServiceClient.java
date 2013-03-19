@@ -48,6 +48,7 @@ public class WebServiceClient extends AbsService {
 				sme1.printStackTrace();
 			}
 		}
+		//System.out.println("JSESSIOn WebCLIENT " + userSessionId);
 		return userSessionId;
 	}
 	
@@ -173,6 +174,9 @@ public class WebServiceClient extends AbsService {
 
 	@Deprecated 
 	public void closeServiceSession(String jsession) {
+	  try {
+		  SessionManager.GetInstance().deleteJSESSION();
+	  }catch(Exception e) {e.printStackTrace();}
 	}
 
 	@Deprecated

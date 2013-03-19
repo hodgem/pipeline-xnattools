@@ -32,8 +32,8 @@ public class XMLStore extends AbsService {
     
     public void store(String xmlContents)  throws Exception{
         try {
-        	 String service_session = SessionManager.GetInstance().getJSESSION();
-             Call call = createCall(service_session);
+        	String service_session = SessionManager.GetInstance().getJSESSION();
+            Call call = createCall(service_session);
             call.setTargetEndpointAddress(host + "axis/StoreXML.jws");
             
             call.setOperationName("store");

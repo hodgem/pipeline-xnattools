@@ -33,6 +33,8 @@ public class SessionManager {
     long DEFUALT_SESSION_TIMEOUT = 900000;
     long timeSinceLastRequest;
 	private final String SESSION_EXPIRATION_TIME = "SESSION_EXPIRATION_TIME";
+	int i=0;
+	
 	
     private SessionManager(String host, String username, String password) {
         _host = host;
@@ -99,11 +101,13 @@ public class SessionManager {
     			break;
     		}
     	}
-    	System.out.println(sessionTimeout);
+    	System.out.println("Session Timeout (millisec) " + sessionTimeout);
     }
 
    
     public synchronized String getJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
+  //  	System.out.println(i + " GETJSESSION CALLED " + _userSessionId);
+    	i++;
     	if (_userSessionId == null || !isAliveJSESSION()) {
     		createJSESSION();
     		return _userSessionId;
@@ -123,7 +127,7 @@ public class SessionManager {
     
     
     public void deleteJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
-        DefaultHttpClient httpclient = new DefaultHttpClient();
+    	DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpDelete httpDelete = new HttpDelete(_host+"data/JSESSION");
         httpDelete.setHeader("Cookie","JSESSIONID="+ _userSessionId);
         HttpResponse response2 = httpclient.execute(httpDelete);
