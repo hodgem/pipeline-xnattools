@@ -166,6 +166,8 @@ public class WebServiceClient extends AbsService {
 		 		if (response.isEntityAvailable()) {
 		 			response.getEntity().write(stream);
 		 		}
+		 	}else {
+		 		System.out.println("RESPONSE " + response.getStatus());
 		 	}
 		 	}catch (IOException ioe) {
 		 		 throw ioe;

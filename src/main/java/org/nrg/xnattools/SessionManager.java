@@ -1,6 +1,7 @@
 package org.nrg.xnattools;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -10,7 +11,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -34,7 +34,7 @@ public class SessionManager {
     long timeSinceLastRequest;
 	private final String SESSION_EXPIRATION_TIME = "SESSION_EXPIRATION_TIME";
 	int i=0;
-	
+	long requestTime;
 	
     private SessionManager(String host, String username, String password) {
         _host = host;
@@ -58,8 +58,11 @@ public class SessionManager {
     
     private synchronized void createJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
         DefaultHttpClient httpclient = new DefaultHttpClient();
-    	HttpPost httpPost = new HttpPost(_host+"data/JSESSION");
+        HttpPost httpPost = new HttpPost(_host+"data/JSESSION");
     	httpclient.getCredentialsProvider().setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
+    	//local machine time
+    	requestTime = System.currentTimeMillis();
+        if (_userSessionId != null ) _userSessionId = null; 
     	
         HttpResponse response = httpclient.execute(httpPost);
         
@@ -97,7 +100,11 @@ public class SessionManager {
     		String headerValue = getSessionExpirationValue(cookie[i]);
     		if (headerValue != null) {
     			String[] headerValues = headerValue.split(",");
-    			sessionTimeout = System.currentTimeMillis() + Long.parseLong(headerValues[1]);
+    			long hostRequestTime = Long.parseLong(headerValues[0]);
+    			long timeDifference =  hostRequestTime - requestTime;
+    			sessionTimeout = (System.currentTimeMillis() - timeDifference) + Long.parseLong(headerValues[1]);
+    			//sessionTimeout = Long.parseLong(headerValues[0]) + Long.parseLong(headerValues[1]);
+    			
     			break;
     		}
     	}
@@ -106,23 +113,28 @@ public class SessionManager {
 
    
     public synchronized String getJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
-  //  	System.out.println(i + " GETJSESSION CALLED " + _userSessionId);
     	i++;
+    	String rtn ;
     	if (_userSessionId == null || !isAliveJSESSION()) {
     		createJSESSION();
-    		return _userSessionId;
+    		rtn = _userSessionId;
     	}else 
-    		return _userSessionId;
+    		rtn = _userSessionId;
+    	System.out.println(i + " GETJSESSION CALLED " + rtn + "  "+ _userSessionId);
+    	return rtn;
     }
 
     
     
-    private boolean isAliveJSESSION(){
+    private synchronized boolean isAliveJSESSION(){
         boolean isAlive = true;
-        if (_userSessionId == null) return !isAlive;
+        boolean rtn = isAlive;
+        if (_userSessionId == null) rtn = !isAlive;
         long now = System.currentTimeMillis();
-        if (now < sessionTimeout) return isAlive;
-        else return !isAlive;
+        if (now < sessionTimeout) rtn =  isAlive;
+        else rtn= !isAlive;
+        System.out.println("JSESSION " + _userSessionId + " isAlive " + rtn + " now - sessionTimeout = " + (now - sessionTimeout));
+        return rtn;
     }
     
     
@@ -143,16 +155,17 @@ public class SessionManager {
 
 
     public static void main(String[] args) throws Exception {
-    	SessionManager sessionManager = SessionManager.GetInstance("http://localhost:8080", "USER", "PWD");
+    	SessionManager sessionManager = SessionManager.GetInstance("https://cnda-dev-16a.nrg.mir", "mohanar", "admin");
     	String _jsession = sessionManager.getJSESSION();
     	System.out.println("Is Session Alive " + sessionManager.isAliveJSESSION());
-//    	try {
-//    		Thread.sleep(900005);
-//    		} catch(InterruptedException e) {
-//    		} 
+    	try {
+    		Thread.sleep(900005);
+    		} catch(InterruptedException e) {
+    		} 
+     	System.out.println("After 15+ minutes Is Session Alive " + sessionManager.isAliveJSESSION());
     	//sessionManager.deleteJSESSION();
- //   	System.out.println("After 5 minutes Is Session Alive " + sessionManager.isAliveJSESSION());
-    	System.exit(0);
+
+     	System.exit(0);
     }
     
 
