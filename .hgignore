@@ -6,3 +6,6 @@ target
 syntax: glob
 *.log
 
+syntax: regexp
+^.*\.[ei]ml$
+^.*_wrk.xml$

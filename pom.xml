@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.nrg</groupId>
 		<artifactId>nrg</artifactId>
-		<version>1.6.1</version>
+		<version>1.6.3</version>
 		<relativePath>../nrg/pom.xml</relativePath>
 	</parent>
 
@@ -20,43 +20,54 @@
 		<dependency>
 			<groupId>org.nrg</groupId>
 			<artifactId>pipelineXNAT</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.nrg.xdat</groupId>
 			<artifactId>beans</artifactId>
-			<version>1.6</version>
 		</dependency>
 
 		<!-- Spring EBR dependencies -->
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
         </dependency>
         <dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>2.5</version>
 		</dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
 		<!-- Upgradable libraries -->
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
 			<artifactId>xmlbeans</artifactId>
-			<version>2.2.0</version>
 		</dependency>
 		<dependency>
-			<!-- TODO: Upgrade to 1.4 or new package or use Spring. -->
 			<groupId>axis</groupId>
 			<artifactId>axis</artifactId>
-			<version>1.3</version>
 		</dependency>
 		<dependency>
-			<groupId>com.noelios.restlet</groupId>
-			<artifactId>com.noelios.restlet</artifactId>
-			<version>1.1.10</version>
-		</dependency>
+			<groupId>org.restlet</groupId>
+			<artifactId>org.restlet</artifactId>
+        </dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -133,7 +144,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>2.3.1</version>
+				<version>2.5.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -168,18 +179,5 @@
             <url>http://maven.xnat.org/plugins-release</url>
         </pluginRepository>
     </pluginRepositories>
-
-    <distributionManagement>
-        <repository>
-            <id>XNAT Server</id>
-            <name>XNAT Maven Library Release</name>
-            <url>http://maven.xnat.org/libs-release-local</url>
-        </repository>
-        <snapshotRepository>
-            <id>XNAT Server</id>
-            <name>XNAT Maven Library Snapshots</name>
-            <url>http://maven.xnat.org/libs-snapshot-local</url>
-        </snapshotRepository>
-    </distributionManagement>
 
 </project>

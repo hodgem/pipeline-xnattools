@@ -1,20 +1,23 @@
 package org.nrg.xnattools;
 
-import java.io.IOException;
-import java.util.Date;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.nrg.xnattools.exception.SessionManagerNotInitedException;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /*
  * This class will be responsible for maintaining session with XNAT. 
@@ -23,48 +26,61 @@ import org.nrg.xnattools.exception.SessionManagerNotInitedException;
  */
 public class SessionManager {
 
-	private static SessionManager self;
-	private String _host;
-	private String _username;
-	private String _password;
-	private String _userSessionId;
-    long startTime;
+    public static final String SESSION_EXPIRATION_TIME = "SESSION_EXPIRATION_TIME";
+
+    private static SessionManager self;
+
+    private URI _host;
+    private String _username;
+    private String _password;
+    private String _userSessionId;
     long sessionTimeout;
-    long DEFUALT_SESSION_TIMEOUT = 900000;
-    long timeSinceLastRequest;
-	private final String SESSION_EXPIRATION_TIME = "SESSION_EXPIRATION_TIME";
 	int i=0;
 	long requestTime;
 	
-    private SessionManager(String host, String username, String password) {
-        _host = host;
-        if (!_host.endsWith("/")) _host += "/";
+    private SessionManager(String host, String username, String password) throws URISyntaxException {
+        _host = new URI(host);
         _username = username;
         _password = password;
     }
     
     public static SessionManager GetInstance(String host, String username, String password) {
         if (self == null) {
-           self = new SessionManager(host,username,password); 
+            try {
+                self = new SessionManager(host,username,password);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Bad URI format found: " + host, e);
+            }
         }
         return self;
     }
 
     public static SessionManager GetInstance() throws SessionManagerNotInitedException {
-    	if (self == null) throw new SessionManagerNotInitedException();
+    	if (self == null) {
+            throw new SessionManagerNotInitedException();
+        }
     	return self;
     }
 
     
-    private synchronized void createJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(_host+"data/JSESSION");
-    	httpclient.getCredentialsProvider().setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
-    	//local machine time
+    private synchronized void createJSESSION() throws IOException, SessionManagerNotInitedException {
+        DefaultHttpClient client = new DefaultHttpClient();
+        final URI uri = _host.resolve("/data/JSESSION");
+        HttpPost httpPost = new HttpPost(uri);
+    	client.getCredentialsProvider().setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
+        HttpContext context = new BasicHttpContext() {{
+            setAttribute(ClientContext.AUTH_CACHE, new BasicAuthCache() {{
+                put(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), new BasicScheme());
+            }});
+        }};
+
+        //local machine time
     	requestTime = System.currentTimeMillis();
-        if (_userSessionId != null ) _userSessionId = null; 
+        if (_userSessionId != null ) {
+            _userSessionId = null;
+        }
     	
-        HttpResponse response = httpclient.execute(httpPost);
+        HttpResponse response = client.execute(httpPost, context);
         
         try {
             if (response.getStatusLine().getStatusCode()==200) {
@@ -85,66 +101,61 @@ public class SessionManager {
     private String getSessionExpirationValue(Header cookie) {
     	String rtn = null;
    		HeaderElement[] headerElements = cookie.getElements();
-    	for (int j=0; j< headerElements.length;j++) {
-    		if (SESSION_EXPIRATION_TIME.equals(headerElements[j].getName())) {
-    			rtn = headerElements[j].getValue();
-    			break;
-    		}
-    	}
+        for (final HeaderElement headerElement : headerElements) {
+            if (SESSION_EXPIRATION_TIME.equals(headerElement.getName())) {
+                rtn = headerElement.getValue();
+                break;
+            }
+        }
     	return rtn;
     }
     
     private synchronized void setSessionExpirationTime(HttpResponse response) {
     	Header[] cookie = getCookie(response);
-    	for (int i=0; i< cookie.length;i++) {
-    		String headerValue = getSessionExpirationValue(cookie[i]);
-    		if (headerValue != null) {
-    			String[] headerValues = headerValue.split(",");
-    			long hostRequestTime = Long.parseLong(headerValues[0]);
-    			long timeDifference =  hostRequestTime - requestTime;
-    			sessionTimeout = (System.currentTimeMillis() - timeDifference) + Long.parseLong(headerValues[1]);
-    			//sessionTimeout = Long.parseLong(headerValues[0]) + Long.parseLong(headerValues[1]);
-    			
-    			break;
-    		}
-    	}
-    	System.out.println("Session Timeout (millisec) " + sessionTimeout);
+        for (final Header aCookie : cookie) {
+            String headerValue = getSessionExpirationValue(aCookie);
+            if (headerValue != null) {
+                String[] headerValues = headerValue.split(",");
+                long hostRequestTime = Long.parseLong(headerValues[0]);
+                long timeDifference = hostRequestTime - requestTime;
+                sessionTimeout = (System.currentTimeMillis() - timeDifference) + Long.parseLong(headerValues[1]);
+                //sessionTimeout = Long.parseLong(headerValues[0]) + Long.parseLong(headerValues[1]);
+
+                break;
+            }
+        }
+    	System.out.println("Session Timeout () " + sessionTimeout);
     }
 
    
-    public synchronized String getJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
+    public synchronized String getJSESSION() throws IOException, SessionManagerNotInitedException{
     	i++;
     	String rtn ;
     	if (_userSessionId == null || !isAliveJSESSION()) {
-    		createJSESSION();
-    		rtn = _userSessionId;
-    	}else 
-    		rtn = _userSessionId;
+            createJSESSION();
+    	}
+        rtn = _userSessionId;
     	System.out.println(i + " GETJSESSION CALLED " + rtn + "  "+ _userSessionId);
     	return rtn;
     }
 
-    
-    
     private synchronized boolean isAliveJSESSION(){
-        boolean isAlive = true;
-        boolean rtn = isAlive;
-        if (_userSessionId == null) rtn = !isAlive;
         long now = System.currentTimeMillis();
-        if (now < sessionTimeout) rtn =  isAlive;
-        else rtn= !isAlive;
+        boolean rtn = now < sessionTimeout;
         System.out.println("JSESSION " + _userSessionId + " isAlive " + rtn + " now - sessionTimeout = " + (now - sessionTimeout));
         return rtn;
     }
     
     
-    public void deleteJSESSION() throws ClientProtocolException, IOException, SessionManagerNotInitedException{
-    	DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpDelete httpDelete = new HttpDelete(_host+"data/JSESSION");
-        httpDelete.setHeader("Cookie","JSESSIONID="+ _userSessionId);
-        HttpResponse response2 = httpclient.execute(httpDelete);
+    public void deleteJSESSION() throws IOException, SessionManagerNotInitedException, URISyntaxException {
+    	DefaultHttpClient client = new DefaultHttpClient();
+        final BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", _userSessionId);
+        cookie.setDomain(_host.getHost());
+        client.getCookieStore().addCookie(cookie);
+        HttpDelete httpDelete = new HttpDelete(_host.resolve("/data/JSESSION"));
+        HttpResponse response = client.execute(httpDelete);
         try {
-            if (response2.getStatusLine().getStatusCode()==200) {
+            if (response.getStatusLine().getStatusCode()==200) {
                 _userSessionId=null;
             }else 
             	throw new SessionManagerNotInitedException();
@@ -156,22 +167,14 @@ public class SessionManager {
 
     public static void main(String[] args) throws Exception {
     	SessionManager sessionManager = SessionManager.GetInstance("https://cnda-dev-16a.nrg.mir", "mohanar", "admin");
-    	String _jsession = sessionManager.getJSESSION();
-    	System.out.println("Is Session Alive " + sessionManager.isAliveJSESSION());
+    	String jsession = sessionManager.getJSESSION();
+    	System.out.println("Got session: " + jsession);
+    	System.out.println("Is alive:    " + sessionManager.isAliveJSESSION());
     	try {
     		Thread.sleep(900005);
-    		} catch(InterruptedException e) {
-    		} 
+        } catch(InterruptedException ignored) {
+        }
      	System.out.println("After 15+ minutes Is Session Alive " + sessionManager.isAliveJSESSION());
-    	//sessionManager.deleteJSESSION();
-
      	System.exit(0);
     }
-    
-
-
-
-    
-
-    
 }
