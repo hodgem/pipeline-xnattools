@@ -1,5 +1,6 @@
 package org.nrg.xnattools;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -30,7 +31,7 @@ public class SessionManager {
 
     private static SessionManager self;
 
-    private URI _host;
+    private URI _service;
     private String _username;
     private String _password;
     private String _userSessionId;
@@ -39,7 +40,8 @@ public class SessionManager {
 	long requestTime;
 	
     private SessionManager(String host, String username, String password) throws URISyntaxException {
-        _host = new URI(host);
+        URI server = new URI(host);
+        _service = StringUtils.isBlank(server.getPath()) ? server.resolve("/data/JSESSION") : server.resolve("data/JSESSION");
         _username = username;
         _password = password;
     }
@@ -65,12 +67,11 @@ public class SessionManager {
     
     private synchronized void createJSESSION() throws IOException, SessionManagerNotInitedException {
         DefaultHttpClient client = new DefaultHttpClient();
-        final URI uri = _host.resolve("/data/JSESSION");
-        HttpPost httpPost = new HttpPost(uri);
+        HttpPost httpPost = new HttpPost(_service);
     	client.getCredentialsProvider().setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
         HttpContext context = new BasicHttpContext() {{
             setAttribute(ClientContext.AUTH_CACHE, new BasicAuthCache() {{
-                put(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), new BasicScheme());
+                put(new HttpHost(_service.getHost(), _service.getPort(), _service.getScheme()), new BasicScheme());
             }});
         }};
 
@@ -150,9 +151,9 @@ public class SessionManager {
     public void deleteJSESSION() throws IOException, SessionManagerNotInitedException, URISyntaxException {
     	DefaultHttpClient client = new DefaultHttpClient();
         final BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", _userSessionId);
-        cookie.setDomain(_host.getHost());
+        cookie.setDomain(_service.getHost());
         client.getCookieStore().addCookie(cookie);
-        HttpDelete httpDelete = new HttpDelete(_host.resolve("/data/JSESSION"));
+        HttpDelete httpDelete = new HttpDelete(_service);
         HttpResponse response = client.execute(httpDelete);
         try {
             if (response.getStatusLine().getStatusCode()==200) {

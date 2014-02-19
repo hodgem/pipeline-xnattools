@@ -12,6 +12,7 @@ package org.nrg.xnattools.xml;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Calendar;
 
@@ -35,14 +36,17 @@ import org.springframework.web.client.RestTemplate;
 
 public class WorkflowStore extends AbsService {
 
-    public WorkflowStore(XmlObject xmlObject, String host, String user, String pwd) throws MalformedURLException {
-        super(host, user,pwd);
+    private final URI hostUri;
+
+    public WorkflowStore(XmlObject xmlObject, String host, String user, String pwd) throws MalformedURLException, URISyntaxException {
+        super(host, user, pwd);
+        hostUri = new URI(host);
         xml = xmlObject;
     }
 
     public void store(String xmlContents)  throws Exception{
         try {
-            final URI uri = new URI(host).resolve("/data/workflows?req_format=xml");
+            final URI uri = StringUtils.isBlank(hostUri.getPath()) ? hostUri.resolve("/data/workflows?req_format=xml") : hostUri.resolve("data/workflows?req_format=xml");
 
             String jsessionid = SessionManager.GetInstance().getJSESSION();
 
