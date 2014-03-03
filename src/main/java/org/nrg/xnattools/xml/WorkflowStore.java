@@ -10,29 +10,38 @@
  */
 package org.nrg.xnattools.xml;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Calendar;
-
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.params.AuthPNames;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.params.AuthPolicy;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 import org.nrg.xnattools.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.CommonsClientHttpRequestFactory;
-import org.springframework.http.converter.*;
-import org.springframework.web.client.RestTemplate;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 public class WorkflowStore extends AbsService {
 
@@ -44,36 +53,37 @@ public class WorkflowStore extends AbsService {
         xml = xmlObject;
     }
 
-    public void store(String xmlContents)  throws Exception{
+    public void store(String xmlContents) throws Exception {
         try {
             final URI uri = StringUtils.isBlank(hostUri.getPath()) ? hostUri.resolve("/data/workflows?req_format=xml") : hostUri.resolve("data/workflows?req_format=xml");
 
-            String jsessionid = SessionManager.GetInstance().getJSESSION();
+            String sessionId = SessionManager.GetInstance().getJSESSION();
 
-            HttpClient client = new HttpClient();
-            client.getParams().setAuthenticationPreemptive(true);
+            HttpPut request = new HttpPut(uri);
+            request.setEntity(new StringEntity(xmlContents, ContentType.APPLICATION_XML));
 
-            HttpHeaders requestHeaders = new HttpHeaders();
+            DefaultHttpClient client = new DefaultHttpClient();
+            HttpContext context = configureAuthentication(client, sessionId, uri);
 
-            if (StringUtils.isBlank(jsessionid)) {
-                Credentials credentials = new UsernamePasswordCredentials(username, password);
-                client.getState().setCredentials(new AuthScope(uri.getHost(), uri.getPort(), AuthScope.ANY_REALM), credentials);
-            } else {
-                requestHeaders.add("Cookie", "JSESSIONID=" + jsessionid);
-            }
-
-            CommonsClientHttpRequestFactory factory = new CommonsClientHttpRequestFactory(client);
-            RestTemplate template = new RestTemplate(factory);
-            template.setMessageConverters(Arrays.asList(messageConverters));
-
-            HttpEntity<String> requestEntity = new HttpEntity<String>(xmlContents, requestHeaders);
-
+            // Only worry about stuff here if we got a 400 or worse. 200 and 300s are OK.
             _log.trace("Sending Request...");
             long startTime = Calendar.getInstance().getTimeInMillis();
-            ResponseEntity response = template.exchange(uri, HttpMethod.PUT, requestEntity, String.class);
+            HttpResponse response = context == null ? client.execute(request) : client.execute(request, context);
             long duration = Calendar.getInstance().getTimeInMillis() - startTime;
-            _log.trace("Response received in {} ms: {}", duration, response.getStatusCode());
-        }catch (Exception e) {
+            if (response.getStatusLine().getStatusCode() >= 400) {
+                _log.error("Error encountered storing the workflow document: " + response.getStatusLine());
+            } else {
+                HttpEntity entity = null;
+                try {
+                    entity = response.getEntity();
+                    _log.info("Got response with {} bytes of content type {} in {} ms", new Object[]{entity.getContentLength(), entity.getContentType() != null ? entity.getContentType().getValue() : "Unspecified", duration});
+                } finally {
+                    if (entity != null) {
+                        EntityUtils.consume(entity);
+                    }
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Unable to store workflow with " + host);
             throw e;
@@ -92,7 +102,36 @@ public class WorkflowStore extends AbsService {
         }
     }
 
+    private HttpContext configureAuthentication(final DefaultHttpClient client, final String sessionId, final URI uri) {
+        client.getParams().setParameter(AuthPNames.PROXY_AUTH_PREF, AUTH_PREFERENCES);
+
+        if (StringUtils.isBlank(sessionId)) {
+            client.getCredentialsProvider().setCredentials(new AuthScope(uri.getHost(), uri.getPort()), new UsernamePasswordCredentials(username, password));
+            return new BasicHttpContext() {{
+                setAttribute(ClientContext.AUTH_CACHE, new BasicAuthCache() {{
+                    put(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), new BasicScheme());
+                }});
+            }};
+        } else {
+            // If we already have a JSESSIONID cookie, then bug out
+            for (Cookie cookie : client.getCookieStore().getCookies()) {
+                if (cookie.getName().equals("JSESSIONID")) {
+                    return null;
+                }
+            }
+            // If we don't have a JSESSIONID cookie, add it.
+            final BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", sessionId);
+            cookie.setDomain(uri.getHost());
+            client.getCookieStore().addCookie(cookie);
+            return null;
+        }
+    }
+
     private static final Logger _log = LoggerFactory.getLogger(XMLStore.class);
-    private final HttpMessageConverter<?>[] messageConverters = new HttpMessageConverter<?>[] { new FormHttpMessageConverter(), new StringHttpMessageConverter(), new ResourceHttpMessageConverter(), new ByteArrayHttpMessageConverter() };
+    private static final List<String> AUTH_PREFERENCES = new ArrayList<String>() {{
+        add(AuthPolicy.BASIC);
+        add(AuthPolicy.DIGEST);
+    }};
+
     XmlObject xml;
 }
