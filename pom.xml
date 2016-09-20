@@ -1,31 +1,47 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.nrg</groupId>
-		<artifactId>parent</artifactId>
-		<version>1.7.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>org.nrg</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.7.0</version>
+    </parent>
 
-	<groupId>org.nrg.xnat.pipeline</groupId>
-	<artifactId>xnat_tools</artifactId>
+    <groupId>org.nrg.xnat.pipeline</groupId>
+    <artifactId>xnat_tools</artifactId>
 
-	<name>XNAT Tools</name>
+    <name>XNAT Tools</name>
 
-	<dependencies>
+    <dependencies>
 
         <!-- NRG/XDAT/XNAT dependencies. If these don't resolve, check that the Maven repositories are available. -->
-		<dependency>
-			<groupId>org.nrg</groupId>
-			<artifactId>pipelineXNAT</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.nrg.xdat</groupId>
-			<artifactId>beans</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.nrg</groupId>
+            <artifactId>pipelineXNAT</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.nrg.xdat</groupId>
+            <artifactId>core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.nrg.xnat</groupId>
+            <artifactId>xnat-data-models</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-		<!-- Spring EBR dependencies -->
+        <!-- Spring EBR dependencies -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
@@ -39,9 +55,9 @@
             <artifactId>commons-httpclient</artifactId>
         </dependency>
         <dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
 
         <!-- Logging -->
         <dependency>
@@ -54,58 +70,58 @@
             <scope>provided</scope>
         </dependency>
 
-		<!-- Upgradable libraries -->
-		<dependency>
-			<groupId>org.apache.xmlbeans</groupId>
-			<artifactId>xmlbeans</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>axis</groupId>
-			<artifactId>axis</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet</groupId>
-			<artifactId>org.restlet</artifactId>
+        <!-- Upgradable libraries -->
+        <dependency>
+            <groupId>org.apache.xmlbeans</groupId>
+            <artifactId>xmlbeans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>axis</groupId>
+            <artifactId>axis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.restlet</groupId>
+            <artifactId>org.restlet</artifactId>
         </dependency>
 
-		<!-- Test dependencies -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 
-	<build>
+    <build>
 
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-			</plugin>
-		</plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
 
-	</build>
+    </build>
 
     <repositories>
         <repository>
             <id>org.nrg.maven.artifacts.snapshot</id>
             <name>XNAT Snapshot Maven Repo</name>
-            <url>http://maven.xnat.org/libs-snapshot</url>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-snapshot</url>
         </repository>
         <repository>
             <id>org.nrg.maven.artifacts.release</id>
             <name>XNAT Release Maven Repo</name>
-            <url>http://maven.xnat.org/libs-release</url>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-release</url>
         </repository>
     </repositories>
 
@@ -113,12 +129,12 @@
         <pluginRepository>
             <id>org.nrg.maven.plugins.snapshot</id>
             <name>XNAT Snapshot Maven Plugin Repo</name>
-            <url>http://maven.xnat.org/plugins-snapshot</url>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-snapshot</url>
         </pluginRepository>
         <pluginRepository>
             <id>org.nrg.maven.plugins.release</id>
             <name>XNAT Release Maven Plugin Repo</name>
-            <url>http://maven.xnat.org/plugins-release</url>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-release</url>
         </pluginRepository>
     </pluginRepositories>
 
