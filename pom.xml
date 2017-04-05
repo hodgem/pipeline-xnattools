@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.nrg</groupId>
         <artifactId>parent</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.2</version>
     </parent>
 
     <groupId>org.nrg.xnat.pipeline</groupId>
-    <artifactId>xnat_tools</artifactId>
+    <artifactId>xnat-tools</artifactId>
 
     <name>XNAT Tools</name>
 
@@ -114,27 +114,37 @@
 
     <repositories>
         <repository>
-            <id>org.nrg.maven.artifacts.snapshot</id>
-            <name>XNAT Snapshot Maven Repo</name>
-            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-snapshot</url>
+            <id>XNAT Maven Dependency Library</id>
+            <name>XNAT Maven Dependency Library</name>
+            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-release</url>
         </repository>
         <repository>
-            <id>org.nrg.maven.artifacts.release</id>
-            <name>XNAT Release Maven Repo</name>
-            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-release</url>
+            <id>XNAT Library</id>
+            <name>XNAT Release Maven Library</name>
+            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-release-local</url>
+        </repository>
+        <repository>
+            <id>XNAT Maven Dependency Snapshot Library</id>
+            <name>XNAT Snapshot Maven Library</name>
+            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot</url>
+        </repository>
+        <repository>
+            <id>XNAT Snapshot Library</id>
+            <name>XNAT Snapshot Maven Library</name>
+            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot-local</url>
         </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
-            <id>org.nrg.maven.plugins.snapshot</id>
-            <name>XNAT Snapshot Maven Plugin Repo</name>
-            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-snapshot</url>
+            <id>XNAT Plugin Snapshot Library</id>
+            <name>XNAT Maven Plugin Snapshot Library</name>
+            <url>http://nrgxnat.jfrog.io/nrgxnat/plugins-snapshot</url>
         </pluginRepository>
         <pluginRepository>
-            <id>org.nrg.maven.plugins.release</id>
-            <name>XNAT Release Maven Plugin Repo</name>
-            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-release</url>
+            <id>XNAT Plugin Library</id>
+            <name>XNAT Maven Plugin Release Library</name>
+            <url>http://nrgxnat.jfrog.io/nrgxnat/plugins-release</url>
         </pluginRepository>
     </pluginRepositories>
 
