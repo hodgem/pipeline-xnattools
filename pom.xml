@@ -126,7 +126,6 @@
     </dependencies>
 
     <build>
-
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -141,43 +140,35 @@
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
-
     </build>
 
     <repositories>
         <repository>
-            <id>XNAT Maven Dependency Library</id>
-            <name>XNAT Maven Dependency Library</name>
+            <id>org.nrg.maven.artifacts.release</id>
+            <name>XNAT Release Maven Repo</name>
             <url>https://nrgxnat.jfrog.io/nrgxnat/libs-release</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
-            <id>XNAT Library</id>
-            <name>XNAT Release Maven Library</name>
-            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-release-local</url>
-        </repository>
-        <repository>
-            <id>XNAT Maven Dependency Snapshot Library</id>
-            <name>XNAT Snapshot Maven Library</name>
+            <id>org.nrg.maven.artifacts.snapshot</id>
+            <name>xnat snapshot maven repo</name>
             <url>https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot</url>
-        </repository>
-        <repository>
-            <id>XNAT Snapshot Library</id>
-            <name>XNAT Snapshot Maven Library</name>
-            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot-local</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
         </repository>
     </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>XNAT Plugin Snapshot Library</id>
-            <name>XNAT Maven Plugin Snapshot Library</name>
-            <url>http://nrgxnat.jfrog.io/nrgxnat/plugins-snapshot</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>XNAT Plugin Library</id>
-            <name>XNAT Maven Plugin Release Library</name>
-            <url>http://nrgxnat.jfrog.io/nrgxnat/plugins-release</url>
-        </pluginRepository>
-    </pluginRepositories>
 
 </project>
