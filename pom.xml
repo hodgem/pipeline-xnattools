@@ -5,44 +5,13 @@
     <parent>
         <groupId>org.nrg</groupId>
         <artifactId>parent</artifactId>
-        <version>1.7.5</version>
+        <version>1.7.0</version>
     </parent>
 
     <groupId>org.nrg.xnat.pipeline</groupId>
-    <artifactId>xnat-tools</artifactId>
-    <version>1.7.5</version>
-
+    <artifactId>xnat_tools</artifactId>
+    <version>1.7.0-HCP</version>
     <name>XNAT Tools</name>
-
-    <url>http://www.xnat.org</url>
-    <scm>
-        <url>https://github.com/nrgxnat/pipeline-xnattools</url>
-    </scm>
-
-    <organization>
-        <name>Washington University Neuroinformatics Research Group</name>
-        <url>http://nrg.wustl.edu</url>
-    </organization>
-    <licenses>
-        <license>
-            <name>BSD</name>
-            <url>http://www.opensource.org/licenses/bsd-license.php</url>
-        </license>
-    </licenses>
-    <developers>
-        <developer>
-            <id>mohanar</id>
-            <name>Mohana Ramaratnam</name>
-            <email>mohanakannan9@gmail.com</email>
-            <timezone>+0530</timezone>
-        </developer>
-        <developer>
-            <id>rherrick</id>
-            <name>Rick Herrick</name>
-            <email>rick.herrick@wustl.edu</email>
-            <timezone>-0600</timezone>
-        </developer>
-    </developers>
 
     <dependencies>
 
@@ -54,6 +23,7 @@
         <dependency>
             <groupId>org.nrg.xdat</groupId>
             <artifactId>core</artifactId>
+            <version>${project.parent.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -64,6 +34,7 @@
         <dependency>
             <groupId>org.nrg.xnat</groupId>
             <artifactId>xnat-data-models</artifactId>
+            <version>${project.parent.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -80,7 +51,6 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.3.3</version>
         </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>
@@ -126,6 +96,7 @@
     </dependencies>
 
     <build>
+
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -140,35 +111,33 @@
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
+
     </build>
 
     <repositories>
         <repository>
-            <id>org.nrg.maven.artifacts.release</id>
-            <name>XNAT Release Maven Repo</name>
-            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-release</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>org.nrg.maven.artifacts.snapshot</id>
+            <name>XNAT Snapshot Maven Repo</name>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-snapshot</url>
         </repository>
         <repository>
-            <id>org.nrg.maven.artifacts.snapshot</id>
-            <name>xnat snapshot maven repo</name>
-            <url>https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
+            <id>org.nrg.maven.artifacts.release</id>
+            <name>XNAT Release Maven Repo</name>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/libs-release</url>
         </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>org.nrg.maven.plugins.snapshot</id>
+            <name>XNAT Snapshot Maven Plugin Repo</name>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-snapshot</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>org.nrg.maven.plugins.release</id>
+            <name>XNAT Release Maven Plugin Repo</name>
+            <url>http://nrgxnat.artifactoryonline.com/nrgxnat/plugins-release</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>
