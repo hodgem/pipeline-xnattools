@@ -4,12 +4,17 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
@@ -59,6 +64,7 @@ public class SessionManager {
 
     public static SessionManager GetInstance() throws SessionManagerNotInitedException {
     	if (self == null) {
+    		System.out.println("ERROR:  Session Manager is NULL");
             throw new SessionManagerNotInitedException();
         }
     	return self;
@@ -66,11 +72,13 @@ public class SessionManager {
 
     
     private synchronized void createJSESSION() throws IOException, SessionManagerNotInitedException {
-        DefaultHttpClient client = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(_service);
-    	client.getCredentialsProvider().setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
-        HttpContext context = new BasicHttpContext() {{
-            setAttribute(ClientContext.AUTH_CACHE, new BasicAuthCache() {{
+        final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        final HttpPost httpPost = new HttpPost(_service);
+    	credsProvider.setCredentials(new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME), new UsernamePasswordCredentials(_username, _password));
+        final HttpClientBuilder builder = HttpClientBuilder.create();
+        final CloseableHttpClient client = builder.setDefaultCredentialsProvider(credsProvider).build();
+        final HttpContext context = new BasicHttpContext() {{
+            setAttribute(HttpClientContext.AUTH_CACHE, new BasicAuthCache() {{
                 put(new HttpHost(_service.getHost(), _service.getPort(), _service.getScheme()), new BasicScheme());
             }});
         }};
@@ -89,6 +97,7 @@ public class SessionManager {
                 _userSessionId=EntityUtils.toString(entity2);
                 setSessionExpirationTime(response);
             }else 
+            	System.out.println("ERROR:  Non-200 response received (status=" + response.getStatusLine().getStatusCode() + ")");
             	throw new SessionManagerNotInitedException();
         } finally {
             httpPost.releaseConnection();
@@ -149,16 +158,19 @@ public class SessionManager {
     
     
     public void deleteJSESSION() throws IOException, SessionManagerNotInitedException, URISyntaxException {
-    	DefaultHttpClient client = new DefaultHttpClient();
         final BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", _userSessionId);
+        final CookieStore cookieStore = new BasicCookieStore();
+		cookieStore.addCookie(cookie);
         cookie.setDomain(_service.getHost());
-        client.getCookieStore().addCookie(cookie);
+        final HttpClientBuilder builder = HttpClientBuilder.create();
+        final CloseableHttpClient client = builder.setDefaultCookieStore(cookieStore).build();
         HttpDelete httpDelete = new HttpDelete(_service);
         HttpResponse response = client.execute(httpDelete);
         try {
             if (response.getStatusLine().getStatusCode()==200) {
                 _userSessionId=null;
             }else 
+            	System.out.println("ERROR:  Non-200 response on DELETE (status=" + response.getStatusLine().getStatusCode() + ")");
             	throw new SessionManagerNotInitedException();
         } finally {
             httpDelete.releaseConnection();

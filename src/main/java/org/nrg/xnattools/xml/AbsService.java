@@ -28,10 +28,11 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -68,22 +69,24 @@ public abstract class AbsService {
         _targetHost = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
         authCache.put(_targetHost, new BasicScheme());
         _context = new BasicHttpContext();
-        _context.setAttribute(ClientContext.AUTH_CACHE, authCache);
+        _context.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
     }
     
     
 
     protected String getResponseBody(URL url) throws IOException, SessionManagerNotInitedException {
-        StringBuilder buffer = new StringBuilder();
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-    	HttpGet httpget = new HttpGet(url.getPath());
+    	
+        final StringBuilder buffer = new StringBuilder();
+        final HttpClientBuilder builder = HttpClientBuilder.create();
+        final CloseableHttpClient httpclient = builder.build();
+    	final HttpGet httpget = new HttpGet(url.getPath());
 
         try {
-        	String _userSessionId = SessionManager.GetInstance().getJSESSION();
+        	final String _userSessionId = SessionManager.GetInstance().getJSESSION();
             httpget.setHeader("Cookie","JSESSIONID="+ _userSessionId);
 
-            HttpResponse response = httpclient.execute(_targetHost, httpget, _context);
-            HttpEntity entity = response.getEntity();
+            final HttpResponse response = httpclient.execute(_targetHost, httpget, _context);
+            final HttpEntity entity = response.getEntity();
             if (entity != null) {
                 buffer.append(EntityUtils.toString(entity));
                 EntityUtils.consume(entity);

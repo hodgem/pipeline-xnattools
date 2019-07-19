@@ -16,16 +16,20 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.auth.params.AuthPNames;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.params.AuthPolicy;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.cookie.Cookie;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
@@ -52,23 +56,47 @@ public class WorkflowStore extends AbsService {
         hostUri = new URI(host);
         xml = xmlObject;
     }
+    
+    public class ClientContext {
+    	
+    	CloseableHttpClient client = null;
+    	HttpContext context = null;
+    	
+		public HttpContext getContext() {
+			return context;
+		}
+		public void setContext(HttpContext context) {
+			this.context = context;
+		}
+		public CloseableHttpClient getClient() {
+			return client;
+		}
+		public void setClient(CloseableHttpClient client) {
+			this.client = client;
+		}
+    	
+    }
 
     public void store(String xmlContents) throws Exception {
+		//HttpResponse response;
         try {
             final URI uri = StringUtils.isBlank(hostUri.getPath()) ? hostUri.resolve("/data/workflows?req_format=xml") : hostUri.resolve("data/workflows?req_format=xml");
 
-            String sessionId = SessionManager.GetInstance().getJSESSION();
+            final String sessionId = SessionManager.GetInstance().getJSESSION();
 
-            HttpPut request = new HttpPut(uri);
+            final HttpPut request = new HttpPut(uri);
             request.setEntity(new StringEntity(xmlContents, ContentType.APPLICATION_XML));
 
-            DefaultHttpClient client = new DefaultHttpClient();
-            HttpContext context = configureAuthentication(client, sessionId, uri);
+            final HttpClientBuilder builder = HttpClientBuilder.create();
+            final ClientContext clientContext = configureAuthentication(builder, sessionId, uri);
+            final CloseableHttpClient client = clientContext.getClient();
+            final HttpContext context = clientContext.getContext();
 
             // Only worry about stuff here if we got a 400 or worse. 200 and 300s are OK.
             _log.trace("Sending Request...");
             long startTime = Calendar.getInstance().getTimeInMillis();
-            HttpResponse response = context == null ? client.execute(request) : client.execute(request, context);
+            @SuppressWarnings({ "resource" })
+			final HttpResponse response = context == null ? client.execute(request) : client.execute(request, context);
             long duration = Calendar.getInstance().getTimeInMillis() - startTime;
             if (response.getStatusLine().getStatusCode() >= 400) {
                 _log.error("Error encountered storing the workflow document: " + response.getStatusLine());
@@ -87,6 +115,8 @@ public class WorkflowStore extends AbsService {
             e.printStackTrace();
             System.out.println("Unable to store workflow with " + host);
             throw e;
+        } finally {
+        	//response.close();
         }
     }
 
@@ -102,35 +132,39 @@ public class WorkflowStore extends AbsService {
         }
     }
 
-    private HttpContext configureAuthentication(final DefaultHttpClient client, final String sessionId, final URI uri) {
-        client.getParams().setParameter(AuthPNames.PROXY_AUTH_PREF, AUTH_PREFERENCES);
+    private ClientContext configureAuthentication(final HttpClientBuilder builder, final String sessionId, final URI uri) {
 
+    	final ClientContext clientContext = new ClientContext();
+    	final CloseableHttpClient client;
+    	final RequestConfig.Builder requestConfig =   
+    	RequestConfig.custom().setTargetPreferredAuthSchemes(AUTH_PREFERENCES);
         if (StringUtils.isBlank(sessionId)) {
-            client.getCredentialsProvider().setCredentials(new AuthScope(uri.getHost(), uri.getPort()), new UsernamePasswordCredentials(username, password));
-            return new BasicHttpContext() {{
-                setAttribute(ClientContext.AUTH_CACHE, new BasicAuthCache() {{
+            final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        	credsProvider.setCredentials(new AuthScope(uri.getHost(), uri.getPort()), new UsernamePasswordCredentials(username, password));
+        	client = builder.setDefaultRequestConfig(requestConfig.build()).setDefaultCredentialsProvider(credsProvider).build();
+        	clientContext.setClient(client);
+            BasicHttpContext httpContext = new BasicHttpContext() {{
+                setAttribute(HttpClientContext.AUTH_CACHE, new BasicAuthCache() {{
                     put(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), new BasicScheme());
                 }});
             }};
+        	clientContext.setContext(httpContext);
         } else {
-            // If we already have a JSESSIONID cookie, then bug out
-            for (Cookie cookie : client.getCookieStore().getCookies()) {
-                if (cookie.getName().equals("JSESSIONID")) {
-                    return null;
-                }
-            }
-            // If we don't have a JSESSIONID cookie, add it.
             final BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", sessionId);
+            final CookieStore cookieStore = new BasicCookieStore();
+    		cookieStore.addCookie(cookie);
             cookie.setDomain(uri.getHost());
-            client.getCookieStore().addCookie(cookie);
-            return null;
+            client = builder.setDefaultRequestConfig(requestConfig.build()).setDefaultCookieStore(cookieStore).build();
+        	clientContext.setClient(client);
         }
+        return clientContext;
     }
 
     private static final Logger _log = LoggerFactory.getLogger(XMLStore.class);
-    private static final List<String> AUTH_PREFERENCES = new ArrayList<String>() {{
-        add(AuthPolicy.BASIC);
-        add(AuthPolicy.DIGEST);
+    @SuppressWarnings("serial")
+	private static final List<String> AUTH_PREFERENCES = new ArrayList<String>() {{
+        add(AuthSchemes.BASIC);
+        add(AuthSchemes.DIGEST);
     }};
 
     XmlObject xml;
