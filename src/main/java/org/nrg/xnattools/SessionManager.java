@@ -96,9 +96,10 @@ public class SessionManager {
             	HttpEntity entity2 = response.getEntity();
                 _userSessionId=EntityUtils.toString(entity2);
                 setSessionExpirationTime(response);
-            }else 
+            }else { 
             	System.out.println("ERROR:  Non-200 response received (status=" + response.getStatusLine().getStatusCode() + ")");
             	throw new SessionManagerNotInitedException();
+            }
         } finally {
             httpPost.releaseConnection();
         }
@@ -169,9 +170,10 @@ public class SessionManager {
         try {
             if (response.getStatusLine().getStatusCode()==200) {
                 _userSessionId=null;
-            }else 
+            }else { 
             	System.out.println("ERROR:  Non-200 response on DELETE (status=" + response.getStatusLine().getStatusCode() + ")");
             	throw new SessionManagerNotInitedException();
+            }
         } finally {
             httpDelete.releaseConnection();
         }
